@@ -1,0 +1,1 @@
+    GetBy{{.FieldSearch}}(ctx context.Context, paginate ParamPagination, param{{.FieldSearch}} string) ([]{{.Name}},int, error)

@@ -1,0 +1,17 @@
+func (s *service) GetBy{{.FieldSearch}}(ctx context.Context,limit,page int,param{{.FieldSearch}} string) (interface{}, error) {
+	var err error
+	var result []{{.Name}}
+	var total int
+	// menentukan offset
+    offset := (page - 1) * limit
+	result,total, err = s.repository.GetBy{{.FieldSearch}}(ctx,ParamPagination{uint64(limit), uint64(offset)},param{{.FieldSearch}})
+	if err != nil {
+		return result, err
+	}
+	if limit>0{
+        paginate := CreatePagination(result, limit, page, total)
+
+        return paginate, nil
+    }
+    return result, nil
+}

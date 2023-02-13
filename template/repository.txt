@@ -1,0 +1,110 @@
+package {{.Package}}
+
+
+/********************************************************************************
+* Temancode {{.Name}} Repository Package                                          *
+*                                                                               *
+* Version: 1.0.0                                                                *
+* Date:    2023-01-05                                                           *
+* Author:  Waluyo Ade Prasetio                                                  *
+* Github:  https://github.com/abdullahPrasetio                                  *
+********************************************************************************/
+
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	sq "github.com/Masterminds/squirrel"
+	"time"
+)
+// Template created by Waluyo Ade Prasetio@Temancode
+
+var (
+	SQL         string
+	queryInsert sq.InsertBuilder
+	querySelect sq.SelectBuilder
+	queryCount  sq.SelectBuilder
+	err         error
+	arguments   []interface{}
+)
+
+type repository struct {
+	db    *sql.DB
+}
+
+type Repository interface {
+	Get(ctx context.Context, paginate ParamPagination) ([]{{.Name}},int, error)
+	Count(ctx context.Context) (int, error)
+    // Add Function interface
+    // End Function interface
+}
+
+type ParamPagination struct {
+	Limit  uint64
+	Offset uint64
+}
+
+func NewRepository(db *sql.DB) *repository {
+	return &repository{db: db}
+}
+
+func (r repository) Get(ctx context.Context, paginate ParamPagination) ([]{{.Name}},int, error) {
+	var total int
+	results := []{{.Name}}{}
+	newctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
+	defer cancel()
+	fieldQuery := {{.FieldQuery}}
+    querySelect = sq.Select(fieldQuery...).From("{{.NameTable}}")
+	if paginate.Limit != 0 {
+		querySelect = querySelect.Limit(paginate.Limit).Offset(paginate.Offset)
+		queryCount = sq.Select("COUNT(*)").From("users")
+        sqlCountQuery, args, err := queryCount.ToSql()
+        if err != nil {
+            panic(err.Error())
+        }
+        err = r.db.QueryRowContext(newctx, sqlCountQuery, args...).Scan(&total)
+        if err != nil {
+            return results, total, err
+        }
+	}
+	SQL, arguments, err = querySelect.ToSql()
+	fmt.Println(SQL)
+	if err != nil {
+		panic(err.Error())
+	}
+	rows, err := r.db.QueryContext(newctx, SQL, arguments...)
+	if err != nil {
+		return results,total, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		result := {{.Name}}{}
+		err := rows.Scan({{.FieldScan}})
+		if err != nil {
+			return results,total, err
+		}
+		results = append(results, result)
+	}
+
+	return results,total, nil
+}
+
+func (r repository) Count(ctx context.Context) (int, error) {
+	var result int
+	newctx, cancelFunc := context.WithTimeout(ctx, timeout*time.Second)
+	defer cancelFunc()
+	querySelect = sq.Select("COUNT(*)").From("{{.NameTable}}")
+	SQL, arguments, err = querySelect.ToSql()
+	if err != nil {
+		panic(err.Error())
+	}
+	err = r.db.QueryRowContext(newctx, SQL).Scan(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// Add New Function
+// End New Function

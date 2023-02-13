@@ -1,0 +1,142 @@
+package {{.Package}}
+
+import (
+	"context"
+    "math"
+    "strconv"
+)
+
+/********************************************************************************
+* Temancode {{.Name}} Service Package                                             *
+*                                                                               *
+* Version: 1.0.0                                                                *
+* Date:    2023-01-05                                                           *
+* Author:  Waluyo Ade Prasetio                                                  *
+* Github:  https://github.com/abdullahPrasetio                                  *
+********************************************************************************/
+
+type service struct {
+	repository Repository
+}
+type Service interface {
+	GetAll(ctx context.Context,limit,page int) (interface{}, error)
+	// Add Function interface
+    // End Function interface
+}
+
+func NewService(repo Repository) *service {
+	return &service{repository: repo}
+}
+
+type Paginate struct {
+	Data         interface{}              `json:"data"`
+	TotalPage    int                      `json:"total_page"`
+	CurrentPage  int                      `json:"current_page"`
+	StartPage    int                      `json:"start_page"`
+	LastPage     int                      `json:"last_page"`
+	Limit        int                      `json:"limit"`
+	NextPage     string                   `json:"next_page"`
+	PreviousPage string                   `json:"previous_page"`
+	Links        []map[string]interface{} `json:"links"`
+}
+
+func (s *service) GetAll(ctx context.Context,limit,page int) (interface{}, error) {
+	var err error
+	var result []{{.Name}}
+	var total int
+	// menentukan offset
+    offset := (page - 1) * limit
+	result,total, err = s.repository.Get(ctx,ParamPagination{uint64(limit), uint64(offset)})
+	if err != nil {
+		return result, err
+	}
+	if limit>0{
+        paginate := CreatePagination(result, limit, page, total)
+
+        return paginate, nil
+    }
+    return result, nil
+}
+
+func CreatePagination(data interface{}, limit, page, total int) Paginate {
+	//change to hostname
+	url := "http://localhost:8025/api/v1/{{.NameTable}}"
+	interval := 1
+	currentPage := page
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+	lastPage := totalPages
+	startPage := 1
+	nextPageUrl := ""
+	nextPage := strconv.Itoa(currentPage + 1)
+	prevPageUrl := ""
+	prevPage := strconv.Itoa(currentPage - 1)
+
+	links := []map[string]interface{}{}
+
+	start := currentPage - interval
+	if start < startPage {
+		start = startPage
+	}
+
+	if startPage == currentPage {
+		prevPageUrl = ""
+		prevPage = strconv.Itoa(currentPage)
+	} else {
+		prevPageUrl = url + "?page=" + prevPage
+		link := map[string]interface{}{
+			"url":           prevPageUrl,
+			"isCurrentPage": false,
+			"page":          prevPage,
+			"label":         "Prev",
+		}
+		links = append(links, link)
+	}
+	end := currentPage + interval
+	if end > lastPage {
+		end = lastPage
+	}
+
+	for i := start; i <= end; i++ {
+		isCurrentPage := false
+		if i == page {
+			isCurrentPage = true
+		}
+		link := map[string]interface{}{
+			"url":           url + "?page=" + strconv.Itoa(i),
+			"isCurrentPage": isCurrentPage,
+			"page":          strconv.Itoa(i),
+			"label":         strconv.Itoa(i),
+		}
+		links = append(links, link)
+	}
+
+	if lastPage == currentPage {
+		nextPageUrl = ""
+		nextPage = strconv.Itoa(currentPage)
+	} else {
+		nextPageUrl = url + "?page=" + nextPage
+		link := map[string]interface{}{
+			"url":           nextPageUrl,
+			"isCurrentPage": false,
+			"page":          nextPage,
+			"label":         "Next",
+		}
+		links = append(links, link)
+	}
+	paginate := Paginate{
+		Data:         data,
+		TotalPage:    totalPages,
+		Limit:        limit,
+		CurrentPage:  page,
+		StartPage:    startPage,
+		LastPage:     lastPage,
+		NextPage:     nextPage,
+		PreviousPage: prevPage,
+		Links:        links,
+	}
+	return paginate
+}
+
+
+// Add New Function
+// End New Function

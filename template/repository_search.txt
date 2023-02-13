@@ -1,0 +1,42 @@
+func (r repository) GetBy{{.FieldSearch}}(ctx context.Context, paginate ParamPagination, param{{.FieldSearch}} string) ([]{{.Name}},int, error) {
+	var total int
+	results := []{{.Name}}{}
+
+	newctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
+	defer cancel()
+	fieldQuery := {{.FieldQuery}}
+	querySelect = sq.Select(fieldQuery...).From("{{.NameTable}}").Where(sq.Eq{"{{.FieldSearchDatabase}}": param{{.FieldSearch}}})
+	if paginate.Limit != 0 {
+		querySelect = querySelect.Limit(paginate.Limit).Offset(paginate.Offset)
+		queryCount = sq.Select("COUNT(*)").From("{{.NameTable}}").Where(sq.Eq{"{{.FieldSearchDatabase}}": param{{.FieldSearch}}})
+        sqlCountQuery, args, err := queryCount.ToSql()
+        if err != nil {
+            panic(err.Error())
+        }
+        err = r.db.QueryRowContext(newctx, sqlCountQuery, args...).Scan(&total)
+        if err != nil {
+            return results, total, err
+        }
+	}
+	SQL, arguments, err = querySelect.ToSql()
+	fmt.Println(param{{.FieldSearch}}, arguments)
+	fmt.Println(SQL)
+	if err != nil {
+		panic(err.Error())
+	}
+	rows, err := r.db.QueryContext(newctx, SQL, arguments...)
+	if err != nil {
+		return results, total, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		result := {{.Name}}{}
+		err := rows.Scan({{.FieldScan}})
+		if err != nil {
+			return results, total, err
+		}
+		results = append(results, result)
+	}
+
+	return results, total, nil
+}

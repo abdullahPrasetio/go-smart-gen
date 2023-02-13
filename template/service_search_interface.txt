@@ -1,0 +1,1 @@
+    GetBy{{.FieldSearch}}(ctx context.Context,limit,page int,param{{.FieldSearch}} string) (interface{}, error)
