@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	make = flag.String("make", "", "Please write make")
+	make   = flag.String("make", "", "Please write make")
+	folder = flag.String("folder", "", "Please write folder")
 )
 
 func main() {
@@ -22,6 +23,12 @@ func main() {
 	switch makeFile {
 	case "model":
 		generator.CreateEntityV2()
+	case "project":
+		if *folder == "" {
+			fmt.Println("Error: Jika anda ingin create project Parameter --folder harus ditentukan")
+			os.Exit(1)
+		}
+		generator.CreateProject(*folder)
 	default:
 		// fields := []generator.Field{
 		// 	{
