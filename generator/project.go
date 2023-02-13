@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +16,14 @@ func CreateProject(destination string) {
 	folderName := "base-go"
 
 	// Clone repository
+	if _, err := os.Stat(filepath.Join(folderName, ".git")); !os.IsNotExist(err) {
+		// Menghapus folder hasil clone
+		err = RemoveFolderAndFile(folderName)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
 	err := exec.Command("git", "clone", repo).Run()
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +35,6 @@ func CreateProject(destination string) {
 		fmt.Println("Folder .git sudah ada di direktori tujuan.")
 		return
 	}
-
 	// Copy folder hasil clone ke folder tujuan
 	err = filepath.Walk(folderName, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -62,7 +70,12 @@ func CreateProject(destination string) {
 		}
 		defer dst.Close()
 
-		_, err = dst.Write([]byte(src))
+		srcBytes, err := ioutil.ReadAll(src)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = dst.Write(srcBytes)
 		if err != nil {
 			return err
 		}
@@ -75,11 +88,21 @@ func CreateProject(destination string) {
 	}
 
 	// Menghapus folder hasil clone
-	err = exec.Command("rm", "-rf", folderName).Run()
+	err = RemoveFolderAndFile(folderName)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	fmt.Println("\nSelesai")
+}
+
+func RemoveFolderAndFile(folderName string) error {
+	// Menghapus folder hasil clone
+	err := exec.Command("rm", "-rf", folderName).Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
