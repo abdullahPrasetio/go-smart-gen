@@ -1,4 +1,4 @@
-module github.com/abdullahPrasetio/my-go-gen
+module github.com/abdullahPrasetio/go-smart-gen
 
 go 1.18
 

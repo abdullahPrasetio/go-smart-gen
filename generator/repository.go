@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	asset "github.com/abdullahPrasetio/my-go-gen/template"
+	asset "github.com/abdullahPrasetio/go-smart-gen/template"
 )
 
 func CreateRepository(modelName string, fields []Field) error {

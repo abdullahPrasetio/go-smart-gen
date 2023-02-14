@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/abdullahPrasetio/my-go-gen/generator"
+	"github.com/abdullahPrasetio/go-smart-gen/generator"
 )
 
 var (
