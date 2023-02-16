@@ -93,6 +93,12 @@ func CreateProject(destination string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	// Menghapus folder .git hasil clone
+	err = RemoveFolderAndFile(destination + "/.git")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	fmt.Println("\nSelesai")
 }
