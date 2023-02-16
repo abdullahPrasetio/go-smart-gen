@@ -4,25 +4,39 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/abdullahPrasetio/go-smart-gen/generator"
-	"github.com/tcnksm/go-latest"
+	"github.com/abdullahPrasetio/go-smart-gen/versioning"
 )
 
 const TagVersion = "v1.0.0"
 
 var (
-	make       = flag.String("make", "", "Please write make")
-	folder     = flag.String("folder", "", "Please write folder")
-	version    = flag.Bool("version", false, "Please write version")
-	update     = flag.Bool("update", false, "Please write update")
-	newVersion = flag.String("newversion", "", "Please write update")
+	make       = flag.String("make", "", "Create model,project dll")
+	folder     = flag.String("folder", "", "Create folder for create project")
+	version    = flag.Bool("version", false, "Check Version")
+	update     = flag.Bool("update", false, "Update version generator")
+	newVersion = flag.String("newversion", "", "Change a new version")
 )
 
 func main() {
+	// Membuat flag
+	helpFlag := flag.Bool("h", false, "print help message")
+
+	// Mengubah penggunaan flag
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
+	// Parse flag
 	flag.Parse()
+
+	// Cek apakah help flag di-set
+	if *helpFlag {
+		flag.Usage()
+		os.Exit(0)
+	}
 	// if *make == "" {
 	// 	fmt.Println("Error: Parameter --make harus ditentukan")
 	// 	os.Exit(1)
@@ -32,11 +46,11 @@ func main() {
 	if *version {
 		// fmt.Println(*version)
 		// GetCurrentVersion()
-		CheckVersion()
+		versioning.CheckVersion()
 	}
 	if *update {
 		newVersioning := *newVersion
-		UpdateVersion(newVersioning)
+		versioning.UpdateVersion(newVersioning)
 	}
 
 	switch makeFile {
@@ -49,86 +63,14 @@ func main() {
 		}
 		generator.CreateProject(*folder)
 	default:
-		// fields := []generator.Field{
-		// 	{
-		// 		Name:    "ID",
-		// 		Kind:    "int",
-		// 		TagJson: "id",
-		// 	},
-		// 	{
-		// 		Name:    "Name",
-		// 		Kind:    "string",
-		// 		TagJson: "name",
-		// 	},
-		// }
-		// generator.CreateService("User", fields)
-		// generator.CreateEntityV2()
-		fmt.Println("Welcome to smartgen")
-	}
-}
-
-func CheckVersion() {
-	githubTag := &latest.GithubTag{
-		Owner:      "abdullahPrasetio",
-		Repository: "go-smart-gen",
-	}
-	currentVersion := GetCurrentVersion()
-	// Periksa apakah versi terbaru tersedia.
-	res, err := latest.Check(githubTag, currentVersion)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		// fmt.Println("Welcome to smartgen")
 	}
 
-	newVersion := "v" + res.Current
-	// fmt.Println(res)
-
-	// Jika versi terbaru tersedia, berikan tahu pengguna.
-	if res.Outdated {
-		fmt.Printf("Versi terbaru %s tersedia! (Anda menggunakan versi %s)\n", newVersion, currentVersion)
-		fmt.Println("Silahkan jalankan program dan tambahkan --update untuk melakukan update generator")
-	} else {
-		fmt.Printf("Anda menggunakan versi terbaru %s\n", newVersion)
-	}
-}
-
-func UpdateVersion(newVersion string) {
-	version := "latest"
-	if newVersion != "" {
-		version = newVersion
-	}
-	fmt.Println(version)
-	cmd := exec.Command("go", "install", "github.com/abdullahPrasetio/go-smart-gen@"+version)
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-	fmt.Println("sukses update versi")
-	return
-}
-
-func GetCurrentVersion() string {
-	// nama modul yang ingin diperiksa
-	moduleName := "github.com/abdullahPrasetio/go-smart-gen"
-
-	// jalankan perintah 'go list -m' dengan nama modul
-	cmd := exec.Command("go", "list", "-m", "-versions", moduleName)
-	output, err := cmd.Output()
-
-	if err != nil {
-		fmt.Println("Error:", err)
-		return ""
-	}
-
-	// baca output sebagai string
-	outputString := string(output)
-
-	// parsing output untuk mendapatkan versi
-	fields := strings.Fields(outputString)
-	// fmt.Println(outputString)
-	version := fields[len(fields)-1]
-
-	// tampilkan versi
-	// fmt.Println("Versi", moduleName, "yang terinstal:", version)
-	return version
-
+	fmt.Println("Untuk mendapatkan bantuan tambah tag -h or -help")
+	fmt.Println("Welcome to smartgen")
+	fmt.Println("Jika anda merasa aplikasi ini berguna silahkan kunjungi beberapa project saya kritik dan saran bisa di tambahkan di issue")
+	fmt.Println("My Project")
+	fmt.Println("- https://github.com/abdullahPrasetio/go-smart-gen")
+	fmt.Println("- https://github.com/abdullahPrasetio/base-go")
+	fmt.Println("- https://github.com/abdullahPrasetio/validation-formatter")
 }
